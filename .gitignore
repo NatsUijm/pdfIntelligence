@@ -1,0 +1,7 @@
+*.bkp
+*.pdf
+*.png
+*.txt
+.DS_Store
+.venv
+*/
