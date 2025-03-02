@@ -15,7 +15,7 @@ def process_images(input_dir="cutter_output", output_dir="ocr_output"):
     reader = easyocr.Reader(['ch_sim', 'en'])
     
     # 需要排除的后缀
-    excluded_suffixes = ['_table.png', '_equation.png', '_figure.png']
+    excluded_suffixes = ['_table.png', '_equation.png', '_figure.png', '_header.png', '_equation.png', '_figure_caption.png', '_table_caption.png']
     
     # 确保输出目录存在
     if not os.path.exists(output_dir):
@@ -63,8 +63,22 @@ def process_images(input_dir="cutter_output", output_dir="ocr_output"):
                 
                 # 将结果连接成一个字符串，不包含换行符
                 if results:
+                    # 过滤掉符合特定条件的文本：
+                    # 以左括号开头，右括号结尾，且总长度小于10
+                    filtered_texts = []
+                    for _, text, _ in results:
+                        # 检查文本是否以左括号开头，右括号结尾
+                        starts_with_left_paren = text.startswith("(") or text.startswith("（")
+                        ends_with_right_paren = text.endswith(")") or text.endswith("）")
+                        
+                        # 如果同时满足开头、结尾条件且长度小于10，则排除
+                        if starts_with_left_paren and ends_with_right_paren and len(text) < 10:
+                            continue
+                        
+                        filtered_texts.append(text)
+                    
                     # 提取所有文本并连接
-                    text_content = ' '.join([text for _, text, _ in results])
+                    text_content = ''.join(filtered_texts)
                     
                     # 写入到输出文件
                     with open(output_file_path, 'w', encoding='utf-8') as f:

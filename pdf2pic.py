@@ -2,10 +2,12 @@ import os
 import sys
 from pdf2image import convert_from_path
 from PyPDF2 import PdfReader
+from PIL import Image
+import numpy as np
 
 def convert_pdf_pages_to_png(pdf_path, output_folder, start_page=None, end_page=None):
     """
-    将PDF文件的指定页面范围转换为PNG图片
+    将PDF文件的指定页面范围转换为PNG图片，并进行二值化处理
     
     参数:
         pdf_path: PDF文件路径
@@ -13,6 +15,9 @@ def convert_pdf_pages_to_png(pdf_path, output_folder, start_page=None, end_page=
         start_page: 起始页码（从1开始），默认为None表示从第一页开始
         end_page: 结束页码，默认为None表示到最后一页
     """
+    # 固定阈值为240
+    threshold = 240
+    
     # 确保输出文件夹存在
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
@@ -41,23 +46,34 @@ def convert_pdf_pages_to_png(pdf_path, output_folder, start_page=None, end_page=
     
     print(f"正在处理 {pdf_path}")
     print(f"转换页面范围: {start_page} 到 {end_page} (总页数: {total_pages})")
+    print(f"使用二值化阈值: {threshold}")
     
-    # 转换PDF页面为图片，使用高DPI来保持原始分辨率
+    # 转换PDF页面为图片
     images = convert_from_path(
         pdf_path,
         first_page=start_page,
         last_page=end_page,
-        dpi=300  # 使用高DPI以保持良好的图像质量，可以根据需要调整
+        dpi=300
     )
     
-    # 保存图片
+    # 保存图片并进行二值化处理
     for i, image in enumerate(images):
         page_num = start_idx + i + 1
+        
+        # 转为灰度图像
+        gray_image = image.convert('L')
+        
+        # 使用NumPy进行二值化处理
+        gray_array = np.array(gray_image)
+        binary_array = np.where(gray_array < threshold, 0, 255).astype(np.uint8)
+        binary_image = Image.fromarray(binary_array)
+        
+        # 保存二值化图像
         output_path = os.path.join(output_folder, f"{pdf_name}_page_{page_num}.png")
-        image.save(output_path, 'PNG')
-        print(f"已保存: {output_path}")
+        binary_image.save(output_path, 'PNG')
+        print(f"已保存二值化图像: {output_path}")
     
-    print(f"转换完成: {len(images)} 页已转换为PNG图片")
+    print(f"转换完成: {len(images)} 页已转换为二值化PNG图片")
 
 def main():
     # 获取当前工作目录（根目录）

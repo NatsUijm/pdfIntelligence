@@ -2,10 +2,7 @@ openpyxl
 pdf2image
 pillow
 easyocr
-pandas
 paddleocr
 paddlepaddle==3.0.0rc1 --index-url https://www.paddlepaddle.org.cn/packages/stable/cpu/
 pypdf2
-pix2tex
-tabulate
-premailer
+pymupdf
